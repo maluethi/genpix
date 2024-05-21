@@ -6,6 +6,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
+import argparse as arg
 
 def choose(subset, exclude, algo="first"):
     """ This is the main routine to find possible solutions"""
@@ -32,33 +33,38 @@ def choose(subset, exclude, algo="first"):
 
 
 n_pixel = 5  # number of pixels
-n_channels = 6
+n_channels = 7
 
 size_square = 2
 
+# generate the central list of all possible combinations
 all_combinations = list(it.combinations(range(n_channels), r=size_square * size_square))
 
+# central pixel map, undefined values are marked as -1
 pixel_map = -1 * np.ones((n_pixel, n_pixel))
 
+# we loop over all pixels starting at index 0,0 and go through row wise. We step through all sub-squares
+# with size "size_square" and pick a viable tuple from the list (if available)
 for col_idx in range(n_pixel - 1):
     for row_idx in range(n_pixel - 1):
+        # get the subsquare to process
         sub_square = pixel_map[col_idx:col_idx + 2, row_idx:row_idx + 2]
-        used_values = sub_square.flatten().tolist()
+        sub_square_list = sub_square.flatten().tolist()
 
         exclude_values = []
+        # look forward the sub-square size (from the starting edge). This value must be
+        # excluded in the search
         if row_idx + 2 < n_pixel:
             exclude_values.append(pixel_map[col_idx, row_idx + 2])
 
-        set_values = list(filter((-1.).__ne__, used_values))
+        already_set_values = list(filter((-1.).__ne__, sub_square_list))
+        _, new_vals = choose(already_set_values, exclude_values, algo='rand')
 
-        entry, new_vals = choose(set_values, exclude_values, algo='rand')
-
+        # now fill the new values into the pixel map
         for new, idx, idy in zip(new_vals, *np.where(sub_square == -1)):
             sub_square[idx, idy] = new
 
 print(pixel_map)
-
-
 
 cm = 1 / 2.54  # centimeters in inches
 
