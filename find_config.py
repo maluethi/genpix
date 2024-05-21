@@ -94,7 +94,8 @@ if args.plot:
     ax.axis('off')
 
     plt.tight_layout()
-    plt.show()
 
     if args.save_plot:
         plt.savefig(f"map-n{n_pixel}-c{n_channels}-s{size_square}.png")
+
+    plt.show()
