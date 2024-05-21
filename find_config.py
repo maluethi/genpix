@@ -31,11 +31,18 @@ def choose(subset, exclude, algo="first"):
 
     return ret, new_values
 
+parser = arg.ArgumentParser(description='Generate a genetic pixel map.')
+parser.add_argument('n_pixels', action="store", type=int, help="size of pixel map")
+parser.add_argument('n_channels', action="store", type=int, help="number of channles")
+parser.add_argument('size_subsquare', action="store", type=int, help="size of sub-square")
+parser.add_argument('--plot', action="store_true", default=False, help="plot the pixel map")
+parser.add_argument('--save_plot', action="store_true", default=False, help="save plot")
+args = parser.parse_args()
 
-n_pixel = 5  # number of pixels
-n_channels = 7
+n_pixel = args.n_pixels  # number of pixels
+n_channels = args.n_channels
 
-size_square = 2
+size_square = args.size_subsquare
 
 # generate the central list of all possible combinations
 all_combinations = list(it.combinations(range(n_channels), r=size_square * size_square))
@@ -66,23 +73,28 @@ for col_idx in range(n_pixel - 1):
 
 print(pixel_map)
 
-cm = 1 / 2.54  # centimeters in inches
+np.savetxt(f"map-n{n_pixel}-c{n_channels}-s{size_square}.txt", pixel_map, fmt="%2d")
 
-qrates = list(range(n_channels))
-norm = mpl.colors.BoundaryNorm(np.linspace(0, n_channels, n_channels + 1), n_channels)
-fmt = mpl.ticker.FuncFormatter(lambda x, pos: qrates[::-1][norm(x)])
+if args.plot:
+    cm = 1 / 2.54  # centimeters in inches
+    qrates = list(range(n_channels))
+    norm = mpl.colors.BoundaryNorm(np.linspace(0, n_channels, n_channels + 1), n_channels)
+    fmt = mpl.ticker.FuncFormatter(lambda x, pos: qrates[::-1][norm(x)])
 
-fig, ax = plt.subplots(figsize=(5 * cm, 5 * cm))
-ax.imshow(pixel_map,
-          cmap=mpl.colormaps["Dark2"].resampled(n_channels),
-          norm=norm)
+    fig, ax = plt.subplots(figsize=(5 * cm, 5 * cm))
+    ax.imshow(pixel_map,
+              cmap=mpl.colormaps["Dark2"].resampled(n_channels),
+              norm=norm)
 
-# Loop over data dimensions and create text annotations.
-for i in range(n_pixel):
-    for j in range(n_pixel):
-        text = ax.text(j, i, f"{pixel_map[i, j]:.0f}",
-                       ha="center", va="center", color="w")
-ax.axis('off')
+    # Loop over data dimensions and create text annotations.
+    for i in range(n_pixel):
+        for j in range(n_pixel):
+            text = ax.text(j, i, f"{pixel_map[i, j]:.0f}",
+                           ha="center", va="center", color="w")
+    ax.axis('off')
 
-plt.tight_layout()
-plt.show()
+    plt.tight_layout()
+    plt.show()
+
+    if args.save_plot:
+        plt.savefig(f"map-n{n_pixel}-c{n_channels}-s{size_square}.png")
